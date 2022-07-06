@@ -14,6 +14,7 @@ public class SwiftQueryWindow : EditorWindow
 
     int selectedTab = 0;
     private SQConfig tempConfig = new SQConfig();
+    private string searchQuery = "";
 
     void OnGUI()
     {
@@ -54,35 +55,43 @@ public class SwiftQueryWindow : EditorWindow
             tempConfig.BrowserPath = EditorUtility.OpenFilePanel("Select browser", "", "");
         }
         GUILayout.EndHorizontal();
-
+        
+        GUILayout.BeginHorizontal();
+        GUILayout.Label("Search engine");
+        tempConfig.SearchEngine = (SupportedSearchEngine) EditorGUILayout.EnumPopup(tempConfig.SearchEngine); 
+        GUILayout.EndHorizontal();
 
         //Save config
         if (GUILayout.Button("Save config"))
         {
             SQConfigLoader.SaveConfig(tempConfig);
+            var oldSearchEngine = tempConfig.SearchEngine;
             tempConfig = new SQConfig();
+            tempConfig.SearchEngine = oldSearchEngine;
         }
     }
 
     private void RenderQueryTab()
     {
         GUILayout.Label("Query", EditorStyles.boldLabel);
+        searchQuery = EditorGUILayout.TextField("Search query", searchQuery);
         if (GUILayout.Button("Open browser window"))
         {
             //Start browser on config path
             var config = SQConfigLoader.LoadConfig();
-            if (config == null)
-            {
-                EditorUtility.DisplayDialog("Error", "Config not found", "OK");
-                return;
-            }
-            var browserPath = config.BrowserPath;
-            if (string.IsNullOrEmpty(browserPath))
-            {
-                EditorUtility.DisplayDialog("Error", "Browser path not found", "OK");
-                return;
-            }
-            System.Diagnostics.Process.Start("https://www.google.com/search?q=to be or not to be");
+            // if (config == null)
+            // {
+            //     EditorUtility.DisplayDialog("Error", "Config not found", "OK");
+            //     return;
+            // }
+            // var browserPath = config.BrowserPath;
+            // if (string.IsNullOrEmpty(browserPath))
+            // {
+            //     EditorUtility.DisplayDialog("Error", "Browser path not found", "OK");
+            //     return;
+            // }
+            var queryString = QueryPathBuilder.BuildQueryPath(config.SearchEngine, searchQuery);
+            System.Diagnostics.Process.Start(queryString);
         }
     }
 }
